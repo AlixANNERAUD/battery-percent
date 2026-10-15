@@ -5,7 +5,7 @@
   "keywords": "battery, lipo, li-ion, lifepo4, state of charge, fuel gauge",
   "repository": {
     "type": "git",
-    "url": "https://github.com/AlixANNERAUD/Battery-Percent.git"
+    "url": "https://github.com/AlixANNERAUD/battery-percent.git"
   },
   "authors": [
     {

@@ -47,7 +47,7 @@ uint8_t percent = battery_percent_from_millivolts(&curve, 3750);
 ### Integration
 
 - **PlatformIO**: `lib_deps = alix-anneraud/battery-percent`
-- **CMake** (ESP-IDF, Zephyr, desktop…): `add_subdirectory(Battery-Percent)` and link `battery_percent::battery_percent`
+- **CMake** (ESP-IDF, Zephyr, desktop…): `add_subdirectory(battery-percent)` and link `battery_percent::battery_percent`
 - **Anything else**: compile `src/battery_percent.c` and add `include/` to your include path
 
 ## Rust

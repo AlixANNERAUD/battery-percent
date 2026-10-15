@@ -57,3 +57,19 @@ jobs:
         run: examples/platformio/.pio/build/native/program
       - name: Pack
         run: pio pkg pack -o "$RUNNER_TEMP"
+
+  chart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generate
+        run: python3 scripts/generate-chart.py
+      - name: Up to date
+        run: |
+          if ! git diff --exit-code docs; then
+            echo "::error::The README chart is out of date, run scripts/generate-chart.py"
+            exit 1
+          fi

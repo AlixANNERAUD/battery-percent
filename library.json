@@ -1,8 +1,8 @@
 {
   "name": "battery-percent",
   "version": "2.0.0",
-  "description": "Hardware-agnostic battery state-of-charge estimation from cell voltage. Plain C99, no dependencies, sourced LiPo, Li-ion, LiFePO4, NiMH and alkaline curves.",
-  "keywords": "battery, lipo, li-ion, lifepo4, state of charge, fuel gauge, embedded",
+  "description": "Turn a battery voltage into a realistic charge percentage on any microcontroller. Real LiPo, Li-ion 18650, LiFePO4, NiMH and alkaline discharge curves, voltage divider and multi-cell pack support, tiny integer-only C99, no dependencies.",
+  "keywords": "battery, battery level, battery percentage, state of charge, soc, lipo, li-ion, 18650, lifepo4, nimh, fuel gauge, voltage, adc, esp32, arduino, stm32, embedded",
   "repository": {
     "type": "git",
     "url": "https://github.com/AlixANNERAUD/battery-percent.git"
@@ -20,12 +20,15 @@
   "build": {
     "srcDir": "src",
     "includeDir": "include",
-    "srcFilter": ["+<*.c>"]
+    "srcFilter": [
+      "+<*.c>"
+    ]
   },
   "export": {
     "exclude": [
       "tests",
       "examples",
+      "docs",
       "src/lib.rs",
       "build.rs",
       "Cargo.toml",

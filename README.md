@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/ci.yml/badge.svg)](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/ci.yml)
 [![Rust](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/rust.yml/badge.svg)](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/rust.yml)
+[![codecov](https://codecov.io/gh/AlixANNERAUD/battery-percent/graph/badge.svg)](https://codecov.io/gh/AlixANNERAUD/battery-percent)
 [![crates.io](https://img.shields.io/crates/v/battery-percent.svg)](https://crates.io/crates/battery-percent)
 [![docs.rs](https://img.shields.io/docsrs/battery-percent)](https://docs.rs/battery-percent)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/alix-anneraud/library/battery-percent.svg)](https://registry.platformio.org/libraries/alix-anneraud/battery-percent)

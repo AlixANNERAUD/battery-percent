@@ -11,6 +11,7 @@ endif()
 option(BATTERY_PERCENT_BUILD_TESTS "Build unit tests" ${BATTERY_PERCENT_TOP_LEVEL})
 option(BATTERY_PERCENT_WERROR "Treat warnings as errors" OFF)
 option(BATTERY_PERCENT_SANITIZE "Build with address and undefined sanitizers" OFF)
+option(BATTERY_PERCENT_COVERAGE "Instrument the library for code coverage" OFF)
 
 if(BATTERY_PERCENT_SANITIZE)
     add_compile_options(-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer)
@@ -26,6 +27,11 @@ set_target_properties(battery_percent PROPERTIES C_STANDARD 99 C_STANDARD_REQUIR
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(battery_percent PRIVATE -Wall -Wextra -Wpedantic -Wconversion $<$<BOOL:${BATTERY_PERCENT_WERROR}>:-Werror>)
+endif()
+
+if(BATTERY_PERCENT_COVERAGE)
+    target_compile_options(battery_percent PRIVATE --coverage -O0)
+    target_link_options(battery_percent PUBLIC --coverage)
 endif()
 
 if(BATTERY_PERCENT_BUILD_TESTS)

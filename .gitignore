@@ -4,3 +4,5 @@
 .pio/
 .claude/
 *.tar.gz
+/c-coverage.xml
+/rust-coverage.lcov

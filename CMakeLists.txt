@@ -27,6 +27,7 @@ set_target_properties(battery_percent PROPERTIES C_STANDARD 99 C_STANDARD_REQUIR
 
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(battery_percent PRIVATE -Wall -Wextra -Wpedantic -Wconversion $<$<BOOL:${BATTERY_PERCENT_WERROR}>:-Werror>)
+    target_compile_options(battery_percent PRIVATE $<$<C_COMPILER_ID:Clang,AppleClang>:-Wdocumentation>)
 endif()
 
 if(BATTERY_PERCENT_COVERAGE)

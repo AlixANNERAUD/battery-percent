@@ -1,12 +1,14 @@
 [package]
 name = "battery-percent"
 version = "2.0.0"
-edition = "2021"
-rust-version = "1.71"
+edition = "2024"
+rust-version = "1.88"
 description = "Hardware-agnostic battery state-of-charge estimation from cell voltage, backed by a portable C core"
 authors = ["Alix ANNERAUD <alix@anneraud.fr>"]
 license = "MIT"
 repository = "https://github.com/AlixANNERAUD/battery-percent"
+homepage = "https://github.com/AlixANNERAUD/battery-percent"
+documentation = "https://docs.rs/battery-percent"
 readme = "README.md"
 keywords = ["battery", "embedded", "no-std", "lipo", "state-of-charge"]
 categories = ["embedded", "no-std", "hardware-support"]
@@ -17,9 +19,10 @@ include = [
     "/src/battery_percent.c",
     "/include/battery_percent.h",
     "/build.rs",
+    "/tests/battery_percent.rs",
     "/README.md",
     "/LICENSE",
-    "/Changelog.md",
+    "/CHANGELOG.md",
 ]
 
 [lib]

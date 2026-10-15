@@ -1,5 +1,6 @@
-target/
-Cargo.lock
+/build*/
+/target/
+.DS_Store
 .pio/
-build/
 .claude/
+*.tar.gz

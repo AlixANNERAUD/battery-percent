@@ -1,0 +1,23 @@
+name: PR Title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions: {}
+
+jobs:
+  pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|refactor|docs|test|ci|build|chore|style|revert)(\([a-z0-9_-]+\))?!?: [^ ].*$'
+          if printf '%s' "$TITLE" | grep -Eq "$pattern"; then
+            echo "Valid title: $TITLE"
+          else
+            echo "::error::Pull request title must follow Conventional Commits, e.g. 'feat: add a card surface' or 'feat!: change the palette API'. Got: $TITLE"
+            exit 1
+          fi

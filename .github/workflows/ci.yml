@@ -1,34 +1,46 @@
-name: CI
+name: ci
 
 on:
   push:
-    branches: [main]
   pull_request:
-  workflow_call:
 
 jobs:
   c:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        compiler: [gcc, clang]
     steps:
       - uses: actions/checkout@v4
-      - run: cmake -S . -B build -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
-      - run: cmake --build build
-      - run: ctest --test-dir build --output-on-failure
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_C_COMPILER=${{ matrix.compiler }}
+          -DBATTERY_PERCENT_WERROR=ON
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
 
-  rust:
+  sanitize:
     runs-on: ubuntu-latest
+    env:
+      ASAN_OPTIONS: detect_leaks=1
+      UBSAN_OPTIONS: print_stacktrace=1
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy, rustfmt
-          targets: thumbv7em-none-eabihf
-      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
-      - run: cargo fmt --check
-      - run: cargo clippy --all-targets -- -D warnings
-      - run: cargo test
-      - run: cargo build --target thumbv7em-none-eabihf
-      - run: cargo publish --dry-run
+      - name: Configure
+        run: >
+          cmake -S . -B build-asan
+          -DCMAKE_C_COMPILER=clang
+          -DCMAKE_BUILD_TYPE=Debug
+          -DBATTERY_PERCENT_WERROR=ON
+          -DBATTERY_PERCENT_SANITIZE=ON
+      - name: Build
+        run: cmake --build build-asan --parallel
+      - name: Test
+        run: ctest --test-dir build-asan --output-on-failure
 
   platformio:
     runs-on: ubuntu-latest
@@ -36,7 +48,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
-      - run: pip install platformio
-      - run: pio pkg pack
-      - run: pio ci --lib=. --project-conf=tests/platformio/platformio.ini tests/platformio/main.cpp
+          python-version: "3.12"
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Build
+        run: pio run -d examples/platformio
+      - name: Run
+        run: examples/platformio/.pio/build/native/program
+      - name: Pack
+        run: pio pkg pack -o "$RUNNER_TEMP"

@@ -120,7 +120,7 @@ impl Filter {
 pub mod ffi {
     use super::{Curve, Filter};
 
-    extern "C" {
+    unsafe extern "C" {
         pub static battery_percent_curve_lipo: Curve<'static>;
         pub static battery_percent_curve_li_ion: Curve<'static>;
         pub static battery_percent_curve_lifepo4: Curve<'static>;
@@ -129,7 +129,7 @@ pub mod ffi {
 
         pub fn battery_percent_from_millivolts(curve: *const Curve<'_>, millivolts: u16) -> u8;
         pub fn battery_percent_from_pack(curve: *const Curve<'_>, millivolts: u32, cells: u8)
-            -> u8;
+        -> u8;
         pub fn battery_percent_adc_to_millivolts(
             raw: u32,
             resolution_bits: u8,

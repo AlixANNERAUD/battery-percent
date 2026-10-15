@@ -97,13 +97,14 @@ Voltage-based estimation is an approximation. Cell voltage drops under load and 
 ## Testing
 
 ```sh
-cmake -S . -B build && cmake --build build && ctest --test-dir build
+cmake -S . -B build -DBATTERY_PERCENT_WERROR=ON -DBATTERY_PERCENT_SANITIZE=ON && cmake --build build && ctest --test-dir build
 cargo test
+pio run -d examples/platformio
 ```
 
 ## Releasing
 
-Bump the version in `library.json`, `Cargo.toml` and `CMakeLists.txt`, update `Changelog.md`, then push a `vX.Y.Z` tag. The release workflow publishes to crates.io and the PlatformIO registry. It needs the `CARGO_REGISTRY_TOKEN` and `PLATFORMIO_AUTH_TOKEN` repository secrets.
+See [RELEASING.md](RELEASING.md).
 
 ## License
 

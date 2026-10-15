@@ -1,4 +1,4 @@
-use battery_percent::{adc_to_millivolts, Curve, Filter, Point};
+use battery_percent::{Curve, Filter, Point, adc_to_millivolts};
 
 #[test]
 fn builtin_curves_cover_zero_to_hundred() {

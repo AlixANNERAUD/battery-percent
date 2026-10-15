@@ -19,7 +19,8 @@ void loop()
 
 int main()
 {
-    printf("%u\n", battery_percent_from_millivolts(&battery_percent_curve_lipo, 3840));
-    return 0;
+    uint8_t percent = battery_percent_from_millivolts(&battery_percent_curve_lipo, 3821);
+    printf("%u%%\n", (unsigned)percent);
+    return percent == 50 ? 0 : 1;
 }
 #endif

@@ -1,12 +1,13 @@
 {
   "name": "battery-percent",
   "version": "2.0.0",
-  "description": "Hardware-agnostic battery state-of-charge estimation from cell voltage. Plain C99, no dependencies, built-in LiPo, Li-ion, LiFePO4, NiMH and alkaline curves.",
-  "keywords": "battery, lipo, li-ion, lifepo4, state of charge, fuel gauge",
+  "description": "Hardware-agnostic battery state-of-charge estimation from cell voltage. Plain C99, no dependencies, sourced LiPo, Li-ion, LiFePO4, NiMH and alkaline curves.",
+  "keywords": "battery, lipo, li-ion, lifepo4, state of charge, fuel gauge, embedded",
   "repository": {
     "type": "git",
     "url": "https://github.com/AlixANNERAUD/battery-percent.git"
   },
+  "homepage": "https://github.com/AlixANNERAUD/battery-percent",
   "authors": [
     {
       "name": "Alix ANNERAUD",
@@ -15,22 +16,29 @@
     }
   ],
   "license": "MIT",
-  "frameworks": "*",
-  "platforms": "*",
   "headers": "battery_percent.h",
   "build": {
     "srcDir": "src",
     "includeDir": "include",
-    "srcFilter": ["+<battery_percent.c>"]
+    "srcFilter": ["+<*.c>"]
   },
   "export": {
-    "include": [
-      "include/battery_percent.h",
-      "src/battery_percent.c",
-      "library.json",
-      "README.md",
-      "LICENSE",
-      "Changelog.md"
+    "exclude": [
+      "tests",
+      "examples",
+      "src/lib.rs",
+      "build.rs",
+      "Cargo.toml",
+      "Cargo.lock",
+      "release-plz.toml",
+      "RELEASING.md",
+      "scripts",
+      "target",
+      "build*",
+      ".github",
+      ".claude"
     ]
-  }
+  },
+  "frameworks": "*",
+  "platforms": "*"
 }

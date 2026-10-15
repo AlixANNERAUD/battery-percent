@@ -233,11 +233,69 @@ impl Filter {
     }
 }
 
+/// Stabilises a charge percentage for display, so that it does not jump or flicker.
+///
+/// While discharging, the displayed percentage only decreases; while charging, it only increases. It moves once the
+/// measured percentage differs by at least the hysteresis, and by at most one percent per step interval. 0% and 100%
+/// are always reached, whatever the hysteresis. Time spent without a pending change does not accumulate, so a long
+/// stable period is never followed by a sudden jump.
+///
+/// The stabiliser never reads a clock or any hardware: the caller passes whether the battery is charging and the
+/// current time in milliseconds from any monotonic clock. Timestamps may wrap around.
+///
+/// ```
+/// use battery_percent::Stabilizer;
+///
+/// let mut stabilizer = Stabilizer::new(2, 1000);
+/// assert_eq!(stabilizer.update(80, false, 0), 80);
+/// assert_eq!(stabilizer.update(81, false, 100), 80);
+/// assert_eq!(stabilizer.update(75, false, 200), 79);
+/// assert_eq!(stabilizer.update(75, false, 1200), 78);
+/// ```
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct Stabilizer {
+    last_step_ms: u32,
+    step_interval_ms: u32,
+    value: u8,
+    hysteresis: u8,
+    primed: u8,
+}
+
+impl Stabilizer {
+    /// Creates a stabiliser.
+    ///
+    /// `hysteresis` is the minimum difference, in percent, before the displayed percentage moves, clamped to 100; 0
+    /// moves on any change in the allowed direction. `step_interval_ms` is the minimum time between two one-percent
+    /// steps; 0 moves straight to the measured percentage.
+    pub fn new(hysteresis: u8, step_interval_ms: u32) -> Self {
+        let mut stabilizer = Self {
+            last_step_ms: 0,
+            step_interval_ms: 0,
+            value: 0,
+            hysteresis: 0,
+            primed: 0,
+        };
+        unsafe {
+            ffi::battery_percent_stabilizer_init(&mut stabilizer, hysteresis, step_interval_ms)
+        };
+        stabilizer
+    }
+
+    /// Feeds a measured percentage and returns the percentage to display.
+    ///
+    /// `percent` is clamped to 100. The first percentage is returned unchanged. `charging` comes from your charger or
+    /// power circuit, and `now_ms` from any monotonic millisecond clock.
+    pub fn update(&mut self, percent: u8, charging: bool, now_ms: u32) -> u8 {
+        unsafe { ffi::battery_percent_stabilizer_update(self, percent, charging, now_ms) }
+    }
+}
+
 /// Raw bindings to the C library, as declared in `battery_percent.h`.
 ///
 /// Prefer the safe API at the crate root. These are useful to pass curves or filters to other C code.
 pub mod ffi {
-    use super::{Curve, Filter};
+    use super::{Curve, Filter, Stabilizer};
 
     unsafe extern "C" {
         /// `battery_percent_curve_lipo`, see [`Curve::lipo`].
@@ -268,5 +326,19 @@ pub mod ffi {
         pub fn battery_percent_filter_init(filter: *mut Filter, shift: u8);
         /// `battery_percent_filter_update`, see [`Filter::update`]. Returns `millivolts` when `filter` is null.
         pub fn battery_percent_filter_update(filter: *mut Filter, millivolts: u16) -> u16;
+        /// `battery_percent_stabilizer_init`, see [`Stabilizer::new`]. Does nothing when `stabilizer` is null.
+        pub fn battery_percent_stabilizer_init(
+            stabilizer: *mut Stabilizer,
+            hysteresis: u8,
+            step_interval_ms: u32,
+        );
+        /// `battery_percent_stabilizer_update`, see [`Stabilizer::update`]. Returns `percent` clamped to 100 when
+        /// `stabilizer` is null.
+        pub fn battery_percent_stabilizer_update(
+            stabilizer: *mut Stabilizer,
+            percent: u8,
+            charging: bool,
+            now_ms: u32,
+        ) -> u8;
     }
 }

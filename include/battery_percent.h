@@ -10,6 +10,7 @@
 #ifndef BATTERY_PERCENT_H
 #define BATTERY_PERCENT_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -62,6 +63,28 @@ typedef struct
     /** Non-zero once the first reading has been received. */
     uint8_t primed;
 } battery_percent_filter_t;
+
+/**
+ * @brief Stabilises a charge percentage for display, so that it does not jump or flicker.
+ *
+ * While discharging, the displayed percentage only decreases; while charging, it only increases. It moves once the
+ * measured percentage differs by at least the hysteresis, and by at most one percent per step interval. Initialise it
+ * with battery_percent_stabilizer_init() and feed percentages with battery_percent_stabilizer_update(). The fields are
+ * internal state and should not be modified directly.
+ */
+typedef struct
+{
+    /** Timestamp of the last step, in milliseconds. */
+    uint32_t last_step_ms;
+    /** Minimum time between two one-percent steps, in milliseconds. */
+    uint32_t step_interval_ms;
+    /** Displayed percentage. */
+    uint8_t value;
+    /** Minimum difference, in percent, before the displayed percentage moves. */
+    uint8_t hysteresis;
+    /** Non-zero once the first percentage has been received. */
+    uint8_t primed;
+} battery_percent_stabilizer_t;
 
 /**
  * @brief Lithium polymer (LiPo) cell, 3306 to 4177 mV.
@@ -166,6 +189,43 @@ void battery_percent_filter_init(battery_percent_filter_t *filter, uint8_t shift
  * @return Smoothed voltage in millivolts, or @p millivolts unchanged when @p filter is NULL.
  */
 uint16_t battery_percent_filter_update(battery_percent_filter_t *filter, uint16_t millivolts);
+
+/**
+ * @brief Initialises a display stabiliser.
+ *
+ * Does nothing when @p stabilizer is NULL.
+ *
+ * @param stabilizer Stabiliser to initialise.
+ * @param hysteresis Minimum difference, in percent, before the displayed percentage moves, clamped to 100. 0 moves on
+ *        any change in the allowed direction.
+ * @param step_interval_ms Minimum time between two one-percent steps, in milliseconds. 0 moves straight to the
+ *        measured percentage.
+ */
+void battery_percent_stabilizer_init(battery_percent_stabilizer_t *stabilizer, uint8_t hysteresis, uint32_t step_interval_ms);
+
+/**
+ * @brief Feeds a measured percentage to a display stabiliser.
+ *
+ * The first percentage after battery_percent_stabilizer_init() is returned unchanged. Afterwards, the displayed
+ * percentage moves towards @p percent only in the allowed direction (down while discharging, up while charging), only
+ * once the difference reaches the hysteresis, and by at most one percent per step interval. 0% and 100% are always
+ * reached, whatever the hysteresis. Time spent without a pending change does not accumulate, so a long stable period
+ * is never followed by a sudden jump. Timestamps may wrap around.
+ *
+ * @code
+ * static battery_percent_stabilizer_t stabilizer;
+ * battery_percent_stabilizer_init(&stabilizer, 2, 30000);
+ *
+ * uint8_t shown = battery_percent_stabilizer_update(&stabilizer, percent, charger_connected(), millis());
+ * @endcode
+ *
+ * @param stabilizer Stabiliser initialised with battery_percent_stabilizer_init().
+ * @param percent Measured charge percentage, clamped to 100.
+ * @param charging true while the battery is charging, as reported by your charger or power circuit.
+ * @param now_ms Current time in milliseconds, from any monotonic clock.
+ * @return Percentage to display, or @p percent clamped to 100 when @p stabilizer is NULL.
+ */
+uint8_t battery_percent_stabilizer_update(battery_percent_stabilizer_t *stabilizer, uint8_t percent, bool charging, uint32_t now_ms);
 
 #ifdef __cplusplus
 }

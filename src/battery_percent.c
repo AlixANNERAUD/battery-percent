@@ -141,3 +141,66 @@ uint16_t battery_percent_filter_update(battery_percent_filter_t *filter, uint16_
 
     return (uint16_t)(filter->state >> shift);
 }
+
+void battery_percent_stabilizer_init(battery_percent_stabilizer_t *stabilizer, uint8_t hysteresis, uint32_t step_interval_ms)
+{
+    if (stabilizer == NULL)
+        return;
+
+    stabilizer->last_step_ms = 0;
+    stabilizer->step_interval_ms = step_interval_ms;
+    stabilizer->value = 0;
+    stabilizer->hysteresis = hysteresis > 100u ? 100u : hysteresis;
+    stabilizer->primed = 0;
+}
+
+uint8_t battery_percent_stabilizer_update(battery_percent_stabilizer_t *stabilizer, uint8_t percent, bool charging, uint32_t now_ms)
+{
+    if (percent > 100u)
+        percent = 100u;
+
+    if (stabilizer == NULL)
+        return percent;
+
+    uint32_t interval = stabilizer->step_interval_ms;
+
+    if (!stabilizer->primed)
+    {
+        stabilizer->value = percent;
+        stabilizer->primed = 1;
+        stabilizer->last_step_ms = now_ms - interval;
+        return percent;
+    }
+
+    uint8_t value = stabilizer->value;
+    uint8_t hysteresis = stabilizer->hysteresis;
+    bool moving;
+
+    if (charging)
+        moving = percent > value && (percent >= value + hysteresis || percent == 100u);
+    else
+        moving = percent < value && (percent + hysteresis <= value || percent == 0u);
+
+    if (!moving)
+    {
+        stabilizer->last_step_ms = now_ms - interval;
+        return value;
+    }
+
+    uint32_t distance = charging ? (uint32_t)(percent - value) : (uint32_t)(value - percent);
+    uint32_t steps = distance;
+
+    if (interval != 0)
+    {
+        uint32_t elapsed = now_ms - stabilizer->last_step_ms;
+        steps = elapsed / interval;
+        if (steps == 0)
+            return value;
+        stabilizer->last_step_ms = now_ms - elapsed % interval;
+        if (steps > distance)
+            steps = distance;
+    }
+
+    stabilizer->value = (uint8_t)(charging ? value + steps : value - steps);
+    return stabilizer->value;
+}

@@ -32,8 +32,11 @@ library do the rest.
   have measured your cells.
 - **Packs and voltage dividers.** Series packs (2S, 3S, 4S…) and a raw ADC → millivolts helper that accounts for your
   resistor divider.
-- **Stable readings.** An integer moving average filter smooths ADC noise without floating point.
-- **Tiny.** Integer-only C99, no allocation, under 1 KB of flash on a Cortex-M4 with every curve included. Tested
+- **Stable readings.** An integer moving average filter smooths ADC noise without floating point, and a display
+  stabiliser keeps the shown percentage from jumping or flickering: it only goes down while discharging and up while
+  charging, with hysteresis and a rate limit.
+- **Tiny.** Integer-only C99, no allocation, about 1 KB of flash on a Cortex-M4 with every function and curve, less
+  once the linker drops what you don't use. Tested
   under address and undefined-behaviour sanitizers.
 - **C, C++, Rust and beyond.** A plain C ABI callable from any language with an FFI, and a `no_std` Rust crate on
   [crates.io](https://crates.io/crates/battery-percent).
@@ -88,7 +91,7 @@ battery-percent = "2"
 ```
 
 ```rust
-use battery_percent::{adc_to_millivolts, Curve, Filter, Point};
+use battery_percent::{adc_to_millivolts, Curve, Filter, Point, Stabilizer};
 
 let millivolts = adc_to_millivolts(2383, 12, 3300, 100_000, 100_000) as u16;
 
@@ -97,6 +100,10 @@ let smoothed = filter.update(millivolts);
 
 let percent = Curve::lipo().percent(smoothed);
 assert!(percent <= 100);
+
+let mut stabilizer = Stabilizer::new(2, 30_000);
+let shown = stabilizer.update(percent, false, 0);
+assert_eq!(shown, percent);
 
 const MY_CELL: [Point; 3] = [Point::new(3000, 0), Point::new(3700, 50), Point::new(4200, 100)];
 let custom = Curve::new(&MY_CELL);
@@ -137,6 +144,31 @@ Copy `include/battery_percent.h` and `src/battery_percent.c` into your project. 
 | `battery_percent_adc_to_millivolts(raw, bits, reference_mv, r1, r2)` | Raw ADC reading to millivolts, including the voltage divider |
 | `battery_percent_filter_init(filter, shift)` | Initialises a moving average filter with weight `1 / 2^shift` (shift up to 16) |
 | `battery_percent_filter_update(filter, millivolts)` | Feeds a reading and returns the smoothed value |
+| `battery_percent_stabilizer_init(stabilizer, hysteresis, step_interval_ms)` | Initialises a display stabiliser |
+| `battery_percent_stabilizer_update(stabilizer, percent, charging, now_ms)` | Feeds a percentage and returns the one to display |
+
+### Stable display
+
+Voltage readings move with the load, so a raw percentage can flicker between two values or jump back up when a heavy
+load stops. Smooth the voltage with the filter, then pass the percentage through a stabiliser:
+
+```c
+static battery_percent_filter_t filter;
+static battery_percent_stabilizer_t stabilizer;
+
+battery_percent_filter_init(&filter, 4);
+battery_percent_stabilizer_init(&stabilizer, 2, 30000);
+
+uint16_t smoothed = battery_percent_filter_update(&filter, millivolts);
+uint8_t percent = battery_percent_from_millivolts(&battery_percent_curve_lipo, smoothed);
+uint8_t shown = battery_percent_stabilizer_update(&stabilizer, percent, charger_connected(), millis());
+```
+
+While discharging, the shown percentage only goes down; while charging, only up. It moves once the measured
+percentage is at least `hysteresis` points away, by at most one point per `step_interval_ms`, and always reaches 0%
+and 100%. The stabiliser never reads a clock or a pin: you pass whether the battery is charging (from your charger's
+status pin, USB detection or PMIC) and the time in milliseconds from any clock (`millis()`, `xTaskGetTickCount()`,
+`k_uptime_get()`…).
 
 ### Custom curves
 
@@ -175,7 +207,8 @@ Connect the battery to an ADC pin through a voltage divider that keeps the pin b
 ### Why does my battery percentage jump around?
 
 Cell voltage sags while the device draws current (Wi-Fi transmissions, motors, displays), and ADCs are noisy. Smooth
-the readings with `battery_percent_filter_update` and measure when the load is light.
+the readings with `battery_percent_filter_update`, measure when the load is light, and pass the result through
+`battery_percent_stabilizer_update` so the displayed value only moves in one direction (see [Stable display](#stable-display)).
 
 ### How accurate is voltage-based state of charge?
 

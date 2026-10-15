@@ -135,6 +135,111 @@ static void test_filter_edge_cases(void)
     battery_percent_filter_init(NULL, 2);
 }
 
+static void test_stabilizer_first_update_is_unchanged(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 2, 1000);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 63, false, 5000), 63);
+}
+
+static void test_stabilizer_only_decreases_while_discharging(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 0, 0);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, false, 0), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 81, false, 1), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 79, false, 2), 79);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 85, false, 3), 79);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 60, false, 4), 60);
+}
+
+static void test_stabilizer_only_increases_while_charging(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 0, 0);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 40, true, 0), 40);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 38, true, 1), 40);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 45, true, 2), 45);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 41, false, 3), 41);
+}
+
+static void test_stabilizer_hysteresis(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 2, 0);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, false, 0), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 79, false, 1), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 78, false, 2), 78);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 79, true, 3), 78);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, true, 4), 80);
+}
+
+static void test_stabilizer_reaches_endpoints(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 5, 0);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 3, false, 0), 3);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 0, false, 1), 0);
+
+    battery_percent_stabilizer_init(&stabilizer, 5, 0);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 97, true, 0), 97);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 100, true, 1), 100);
+}
+
+static void test_stabilizer_rate_limit(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 0, 1000);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, false, 0), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 0), 79);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 500), 79);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 1000), 78);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 3500), 76);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 4000), 75);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 100000), 70);
+}
+
+static void test_stabilizer_idle_time_does_not_accumulate(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 0, 1000);
+
+    battery_percent_stabilizer_update(&stabilizer, 80, false, 0);
+    for (uint32_t t = 0; t <= 100000; t += 500)
+        CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, false, t), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 100500), 79);
+}
+
+static void test_stabilizer_timestamps_wrap_around(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+    battery_percent_stabilizer_init(&stabilizer, 0, 1000);
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 80, false, UINT32_MAX - 500u), 80);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 70, false, 499), 78);
+}
+
+static void test_stabilizer_edge_cases(void)
+{
+    battery_percent_stabilizer_t stabilizer;
+
+    CHECK_EQUAL(battery_percent_stabilizer_update(NULL, 42, false, 0), 42);
+    CHECK_EQUAL(battery_percent_stabilizer_update(NULL, 150, false, 0), 100);
+    battery_percent_stabilizer_init(NULL, 2, 1000);
+
+    battery_percent_stabilizer_init(&stabilizer, 200, 0);
+    CHECK_EQUAL(stabilizer.hysteresis, 100);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 150, true, 0), 100);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 50, false, 1), 100);
+    CHECK_EQUAL(battery_percent_stabilizer_update(&stabilizer, 0, false, 2), 0);
+}
+
 int main(void)
 {
     test_percent_clamps_outside_curve();
@@ -146,6 +251,15 @@ int main(void)
     test_adc_to_millivolts();
     test_filter_smooths_readings();
     test_filter_edge_cases();
+    test_stabilizer_first_update_is_unchanged();
+    test_stabilizer_only_decreases_while_discharging();
+    test_stabilizer_only_increases_while_charging();
+    test_stabilizer_hysteresis();
+    test_stabilizer_reaches_endpoints();
+    test_stabilizer_rate_limit();
+    test_stabilizer_idle_time_does_not_accumulate();
+    test_stabilizer_timestamps_wrap_around();
+    test_stabilizer_edge_cases();
 
     if (failures != 0)
     {

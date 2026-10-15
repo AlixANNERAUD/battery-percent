@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(battery_percent VERSION 2.0.2 LANGUAGES C)
+project(battery_percent VERSION 2.1.0 LANGUAGES C)
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
     set(BATTERY_PERCENT_TOP_LEVEL ON)

@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1](https://github.com/AlixANNERAUD/battery-percent/compare/v2.0.0...v2.0.1) - 2026-10-15
+
+### Documentation
+
+- make the readme and package metadata attractive for new users
+- clean up the 2.0.0 changelog entry
+
 ## [2.0.0](https://github.com/AlixANNERAUD/battery-percent/releases/tag/v2.0.0) - 2026-10-15
 
 Renamed from Battery Library: the package is now `battery-percent` on PlatformIO and crates.io.

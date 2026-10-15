@@ -1,6 +1,6 @@
 [package]
 name = "battery-percent"
-version = "2.0.1"
+version = "2.0.2"
 edition = "2024"
 rust-version = "1.88"
 description = "Turn a battery voltage into a realistic charge percentage: LiPo, Li-ion 18650, LiFePO4, NiMH and alkaline discharge curves for embedded no_std, backed by a tiny C99 core"

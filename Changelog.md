@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.4] - Unreleased
+
+- Deprecate this package in favour of [battery-percent](https://registry.platformio.org/libraries/alix-anneraud/battery-percent).
+
 ## [1.0.3] - 2023-06-04
 
 - Remove log messages.

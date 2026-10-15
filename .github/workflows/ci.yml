@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+jobs:
+  c:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S . -B build -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+          targets: thumbv7em-none-eabihf
+      - run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+      - run: cargo build --target thumbv7em-none-eabihf
+      - run: cargo publish --dry-run
+
+  platformio:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install platformio
+      - run: pio pkg pack
+      - run: pio ci --lib=. --project-conf=tests/platformio/platformio.ini tests/platformio/main.cpp

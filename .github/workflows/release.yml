@@ -1,0 +1,44 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          tag="${GITHUB_REF_NAME#v}"
+          cargo_version=$(grep -m1 '^version' Cargo.toml | cut -d '"' -f2)
+          pio_version=$(python3 -c 'import json; print(json.load(open("library.json"))["version"])')
+          cmake_version=$(grep -oP 'project\(battery_percent VERSION \K[0-9.]+' CMakeLists.txt)
+          echo "tag=$tag cargo=$cargo_version platformio=$pio_version cmake=$cmake_version"
+          test "$tag" = "$cargo_version" && test "$tag" = "$pio_version" && test "$tag" = "$cmake_version"
+
+  crates-io:
+    needs: [ci, versions]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  platformio:
+    needs: [ci, versions]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - run: pip install platformio
+      - run: pio pkg publish --type library --no-interactive
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}

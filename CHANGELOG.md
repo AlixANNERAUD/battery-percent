@@ -7,28 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.0.0](https://github.com/AlixANNERAUD/battery-percent/releases/tag/v2.0.0) - 2026-10-15
 
-### Miscellaneous
+Renamed from Battery Library: the package is now `battery-percent` on PlatformIO and crates.io.
 
-- release with release-plz like lvgl_theme_shadcn
+### Added
 
-### Other
+- Hardware-agnostic plain C99 core: the caller provides a voltage in millivolts and gets a charge percentage.
+- Sourced discharge curves with interpolation for LiPo, Li-ion 18650, LiFePO4, NiMH and alkaline cells.
+- Custom curves, multi-cell series packs, raw ADC to millivolts conversion with a voltage divider, and an integer
+  moving average filter.
+- `no_std` Rust crate on crates.io wrapping the C core.
+- PlatformIO support for any platform and framework, and a CMake target.
 
-- Initial commit
-- Initial commit
-- Corrected conversion issues
-- Add feature to improve flexibility
-- Add returning attribute methods
-- Correct typing mistakes
-- Add more option to constructor
-- Update library.json
-- Add changelog file
-- Fix how charge level is calculated.
-- Update changelog
-- Update library.json
-- More stable measurements using circular buffer
-- Remove log messages
-- Rewrite as hardware-agnostic battery-percent library
-- Use renamed repository URL
+### Changed
+
+- Header renamed to `battery_percent.h`, with every symbol prefixed by `battery_percent_`.
+
+### Removed
+
+- The Arduino `Battery_Class` API and its linear mapping between a minimum and a maximum voltage.
 
 ## [1.0.3] - 2023-06-04
 

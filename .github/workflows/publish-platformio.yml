@@ -1,0 +1,55 @@
+name: publish-platformio
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Released version, checked against the manifests
+        required: true
+        type: string
+    secrets:
+      PLATFORMIO_AUTH_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Expected version, checked against the manifests when set
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: github.repository_owner == 'AlixANNERAUD'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PlatformIO
+        run: pip install platformio
+      - name: Check version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          scripts/sync-version.sh
+          if ! git diff --exit-code; then
+            echo "::error::C manifest versions differ from the Cargo version"
+            exit 1
+          fi
+          if [ -n "$VERSION" ]; then
+            scripts/sync-version.sh "${VERSION#v}"
+            if ! git diff --exit-code; then
+              echo "::error::C manifest versions differ from the released version $VERSION"
+              exit 1
+            fi
+          fi
+      - name: Pack
+        run: pio pkg pack -o "$RUNNER_TEMP"
+      - name: Publish
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+        run: pio pkg publish "$RUNNER_TEMP"/battery-percent-*.tar.gz --type library --owner alix-anneraud --no-interactive

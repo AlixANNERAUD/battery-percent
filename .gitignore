@@ -1,0 +1,6 @@
+/build*/
+/target/
+.DS_Store
+.pio/
+.claude/
+*.tar.gz

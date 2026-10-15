@@ -1,4 +1,4 @@
-use battery_percent::{Curve, Filter, Point, adc_to_millivolts};
+use battery_percent::{Curve, Filter, Point, Stabilizer, adc_to_millivolts};
 
 #[test]
 fn builtin_curves_cover_zero_to_hundred() {
@@ -72,4 +72,24 @@ fn filter_converges() {
         value = filter.update(3600);
     }
     assert_eq!(value, 3600);
+}
+
+#[test]
+fn stabilizer_is_monotonic_per_direction() {
+    let mut stabilizer = Stabilizer::new(0, 0);
+    assert_eq!(stabilizer.update(50, false, 0), 50);
+    assert_eq!(stabilizer.update(55, false, 1), 50);
+    assert_eq!(stabilizer.update(45, false, 2), 45);
+    assert_eq!(stabilizer.update(40, true, 3), 45);
+    assert_eq!(stabilizer.update(48, true, 4), 48);
+}
+
+#[test]
+fn stabilizer_rate_limits_and_reaches_endpoints() {
+    let mut stabilizer = Stabilizer::new(3, 1000);
+    assert_eq!(stabilizer.update(2, false, 0), 2);
+    assert_eq!(stabilizer.update(0, false, 0), 1);
+    assert_eq!(stabilizer.update(0, false, 500), 1);
+    assert_eq!(stabilizer.update(0, false, 1000), 0);
+    assert_eq!(stabilizer.update(200, true, 2000), 1);
 }

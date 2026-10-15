@@ -78,7 +78,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -101,14 +100,18 @@ jobs:
       - name: Upload C coverage
         uses: codecov/codecov-action@v5
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+          plugins: noop
           files: c-coverage.xml
           flags: c
           fail_ci_if_error: true
       - name: Upload Rust coverage
         uses: codecov/codecov-action@v5
         with:
-          use_oidc: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          disable_search: true
+          plugins: noop
           files: rust-coverage.lcov
           flags: rust
           fail_ci_if_error: true

@@ -80,10 +80,11 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: jdx/mise-action@v5
+      - uses: jdx/mr-boxington-action@v1
         with:
-          components: llvm-tools-preview
-      - uses: taiki-e/install-action@cargo-llvm-cov
+          cache-key-suffix: coverage
+          github-cache-mode: objects
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

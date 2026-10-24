@@ -18,10 +18,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: jdx/mise-action@v5
+
+      - uses: jdx/mr-boxington-action@v1
         with:
-          components: rustfmt, clippy
-          targets: thumbv7em-none-eabihf
+          cache-key-suffix: check
 
       - name: Install ARM toolchain
         run: sudo apt-get update && sudo apt-get install -y gcc-arm-none-eabi
@@ -45,10 +46,16 @@ jobs:
 
   msrv:
     runs-on: ubuntu-latest
+    env:
+      MISE_ENV: msrv
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@1.88
+      - uses: jdx/mise-action@v5
+
+      - uses: jdx/mr-boxington-action@v1
+        with:
+          cache-key-suffix: msrv
 
       - name: Test
         run: cargo test
@@ -58,7 +65,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: jdx/mise-action@v5
+
+      - uses: jdx/mr-boxington-action@v1
+        with:
+          cache-key-suffix: package
 
       - name: Version consistency
         run: |

@@ -3,6 +3,7 @@
 [![CI](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/ci.yml/badge.svg)](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/ci.yml)
 [![Rust](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/rust.yml/badge.svg)](https://github.com/AlixANNERAUD/battery-percent/actions/workflows/rust.yml)
 [![codecov](https://codecov.io/gh/AlixANNERAUD/battery-percent/graph/badge.svg)](https://codecov.io/gh/AlixANNERAUD/battery-percent)
+[![vulnerabilities](https://vulnerabilites.anneraud.fr/badges/5f7884bbcb5863723daa0c0a70dc9bcb.svg)](https://vulnerabilites.anneraud.fr/organizations/alix_anneraud/projects/battery-percent)
 [![crates.io](https://img.shields.io/crates/v/battery-percent.svg)](https://crates.io/crates/battery-percent)
 [![docs.rs](https://img.shields.io/docsrs/battery-percent)](https://docs.rs/battery-percent)
 [![PlatformIO Registry](https://badges.registry.platformio.org/packages/alix-anneraud/library/battery-percent.svg)](https://registry.platformio.org/libraries/alix-anneraud/battery-percent)

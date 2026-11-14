@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1](https://github.com/AlixANNERAUD/battery-percent/compare/v2.1.0...v2.1.1) - 2026-11-14
+
+### Miscellaneous
+
+- track the dependencies in nanobom and show their badge ([#17](https://github.com/AlixANNERAUD/battery-percent/pull/17))
+- *(deps)* bump cc from 1.10.0 to 1.11.1 in the cargo group across 1 directory ([#16](https://github.com/AlixANNERAUD/battery-percent/pull/16))
+
 ## [2.1.0](https://github.com/AlixANNERAUD/battery-percent/compare/v2.0.2...v2.1.0) - 2026-10-15
 
 ### Added
